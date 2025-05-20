@@ -1,0 +1,116 @@
+# DocumentProcessor Project - 3 Week Task Plan
+
+**Start Date:** Tuesday, May 20, 2025  
+**Work Days:** Wednesday–Friday (Week 1), Monday–Friday (Weeks 2–3)  
+**Total Weeks:** 3  
+**Total Work Days:** 13
+
+---
+
+## Week 1: Project Setup & Basic Functionality (May 21–23)
+
+### Goals:
+- Scaffold the frontend and backend
+- Set up basic project structure and user upload flow
+- Deploy initial backend + database connection
+
+### Daily Tasks:
+
+**Wednesday, May 21 – Project Initialization**
+- [ ] Initialize GitHub repo with `/frontend` and `/backend` directories
+- [ ] Set up Create-React-App with Tailwind CSS in `/frontend`
+- [ ] Set up Node.js + Express server in `/backend`
+- [ ] Install dependencies: `express`, `xml2js`, `pdfkit`, `handlebars`, `mongodb`, etc.
+
+**Thursday, May 22 – Upload Handling and DB Setup**
+- [ ] Set up MongoDB Atlas and connect backend
+- [ ] Create `/upload` endpoint to accept XML and JSON
+- [ ] Store uploaded files in `/uploads` and log metadata to MongoDB
+
+**Friday, May 23 – Template and PDF Rendering**
+- [ ] Create basic Handlebars template
+- [ ] Generate PDF using `pdfkit` from parsed data
+- [ ] Return generated PDF as response
+
+---
+
+## Week 2: Vulnerability Integration & Testing (May 26–30)
+
+### Goals:
+- Introduce intentional vulnerabilities
+- Begin offensive testing
+- Start rotating team roles
+
+### Daily Tasks:
+
+**Monday, May 26 – Introduce XML & JSON Vulnerabilities**
+- [ ] Inject XXE vulnerability using `xml2js` (unrestricted parsing)
+- [ ] Allow large/recursive XML (for DoS simulation)
+- [ ] Add JSON deserialization vulnerability (`JSON.parse` with unsafe inputs)
+
+**Tuesday, May 27 – JSON Testing and Documentation**
+- [ ] Create malformed JSON payloads for deserialization attacks
+- [ ] Peer-review the insecure code
+- [ ] Begin documenting vulnerabilities in GitHub Issues
+
+**Wednesday, May 28 – Templating and Path Vulnerabilities**
+- [ ] Start integrating SSTI via Handlebars templates
+- [ ] Create export path vulnerability (`../../etc/passwd` case)
+- [ ] Test Handlebars with dangerous expressions like `{{#with "constructor"}}`
+
+**Thursday, May 29 – Offensive Testing with Security Tools**
+- [ ] Start offensive testing using:
+  - Burp Suite
+  - OWASP ZAP
+  - Wireshark
+- [ ] Record test results and exploit payloads
+
+**Friday, May 30 – Logging Vulnerability Observations**
+- [ ] Create a test plan for each vulnerability
+- [ ] Start incident log for all observed attacks
+- [ ] Rotate team roles: Parser → Template → Forensics
+
+---
+
+## Week 3: Remediation, Deployment, & Final Report (June 2–6)
+
+### Goals:
+- Harden system
+- Finalize deployment
+- Write and submit the incident response report
+
+### Daily Tasks:
+
+**Monday, June 2 – XML and JSON Hardening**
+- [ ] Mitigate XXE: set `noent: true` and test
+- [ ] Add `maxDepth` and `maxChars` limits to prevent XML DoS
+- [ ] Secure JSON deserialization with `safe-parse` or similar
+
+**Tuesday, June 3 – Template and Filesystem Hardening**
+- [ ] Escape and sanitize all Handlebars inputs
+- [ ] Restrict filesystem access to `/uploads` using `path.normalize()`
+- [ ] Retest SSTI and traversal after fixes
+
+**Wednesday, June 4 – Logging and Frontend Deployment**
+- [ ] Integrate `Winston` or similar for structured logging
+- [ ] Set up error alerting on repeated parsing failures
+- [ ] Deploy frontend on GitHub Pages
+
+**Thursday, June 5 – Final Backend Deployment and Testing**
+- [ ] Deploy backend and MongoDB via Railway.app
+- [ ] Perform full system test (upload → parse → generate PDF)
+- [ ] Validate that patched vulnerabilities no longer work
+
+**Friday, June 6 – Final Report and Live Demo**
+- [ ] Finalize and submit the incident response report
+- [ ] Clean up GitHub Issues with links to remediated PRs
+- [ ] Present live demo (GitHub Pages URL + Railway backend)
+
+---
+
+## Tools & Resources
+
+- Node.js, Express.js, MongoDB Atlas, Railway.app
+- Tailwind CSS, React, Handlebars, pdfkit
+- OWASP ZAP, Burp Suite, Wireshark
+- CWE & OWASP Top 10 references
