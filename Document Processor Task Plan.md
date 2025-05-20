@@ -7,7 +7,7 @@
 
 ---
 
-## Week 1: Project Setup & Basic Functionality (May 21–23)
+## Week 1: Project Setup & Basic Functionality (May 20–23)
 
 ### Goals:
 - Scaffold the frontend and backend
@@ -16,18 +16,19 @@
 
 ### Daily Tasks:
 
-**Wednesday, May 21 – Project Initialization**
-- [ ] Initialize GitHub repo with `/frontend` and `/backend` directories
-- [ ] Set up Create-React-App with Tailwind CSS in `/frontend`
-- [ ] Set up Node.js + Express server in `/backend`
-- [ ] Install dependencies: `express`, `xml2js`, `pdfkit`, `handlebars`, `mongodb`, etc.
+**Tuesday, May 20 – Project Initialization**
+- [X] Initialize GitHub repo with `/frontend` and `/backend` directories
+- [X] Set up Create-React-App with Tailwind CSS in `/frontend`
+- [X] Set up Node.js + Express server in `/backend`
+- [X] Install dependencies: `express`, `xml2js`, `pdfkit`, `handlebars`, `mongodb`, etc.
 
-**Thursday, May 22 – Upload Handling and DB Setup**
-- [ ] Set up MongoDB Atlas and connect backend
-- [ ] Create `/upload` endpoint to accept XML and JSON
-- [ ] Store uploaded files in `/uploads` and log metadata to MongoDB
+**Wednesday, May 21 – Upload Handling and DB Setup**
+- [X] Set up MongoDB Atlas and connect backend
+- [X] Create `/upload` endpoint to accept XML and JSON
+- [X] Store uploaded files in `/uploads`
+- [X] Log metadata to MongoDB
 
-**Friday, May 23 – Template and PDF Rendering**
+**Thursday, May 22 – Template and PDF Rendering**
 - [ ] Create basic Handlebars template
 - [ ] Generate PDF using `pdfkit` from parsed data
 - [ ] Return generated PDF as response
