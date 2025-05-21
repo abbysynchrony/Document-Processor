@@ -3,8 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const libxmljs = require('libxmljs2');
 const xml2js = require('xml2js');
-const parser = new xml2js.Parser();
 const Document = require('../models/Document');
 
 // Configure multer storage
@@ -33,7 +33,7 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        // Removed file size limit to allow large XML files
     }
 });
 
@@ -42,7 +42,88 @@ async function parseFileContent(filePath, fileExt) {
     const fileContent = await fs.readFile(filePath, 'utf8');
     
     if (fileExt === '.xml') {
-        return await parser.parseStringPromise(fileContent);
+        try {
+            // First parse with libxmljs2 for XXE
+            const xmlDoc = libxmljs.parseXml(fileContent, {
+                noblanks: false,
+                noent: true,  // Enable entity expansion
+                nocdata: false,
+                nowarning: true,
+                pedantic: false,
+                recover: true,
+                maxDepth: -1,  // Disable depth limit
+                maxChars: -1,  // Disable character limit
+                dtdload: true, // Enable DTD loading
+                dtdvalid: true, // Enable DTD validation
+                baseUrl: null, // Disable base URL resolution
+                substituteEntities: true // Enable entity substitution
+            });
+
+            // Get the data element if it exists
+            const dataElement = xmlDoc.get('//data');
+            let result = {};
+            
+            if (dataElement) {
+                // Get the raw text content without any processing
+                result.content = dataElement.toString();
+            }
+
+            // Get hosts element if it exists
+            const hostsElement = xmlDoc.get('//hosts');
+            if (hostsElement) {
+                result.hosts = hostsElement.text();
+            }
+
+            // Get system element if it exists
+            const systemElement = xmlDoc.get('//system');
+            if (systemElement) {
+                result.system = systemElement.text();
+            }
+
+            // Now parse with xml2js for DoS
+            const parser = new xml2js.Parser({
+                explicitArray: false,
+                mergeAttrs: true,
+                explicitRoot: true,
+                tagNameProcessors: [xml2js.processors.stripPrefix],
+                valueProcessors: [xml2js.processors.parseBooleans, xml2js.processors.parseNumbers],
+                attrValueProcessors: [xml2js.processors.parseBooleans, xml2js.processors.parseNumbers],
+                // Disable all protections
+                ignoreAttrs: false,
+                explicitChildren: false,
+                childkey: '$$',
+                charsAsChildren: false,
+                includeWhiteChars: true,
+                async: false,
+                strict: false,
+                trim: false,
+                normalize: false,
+                normalizeTags: false,
+                explicitArray: false,
+                tagNameProcessors: [],
+                valueProcessors: [],
+                attrValueProcessors: [],
+                // Enable entity expansion
+                entityExpansion: true,
+                // Disable limits
+                maxDepth: -1,
+                maxLength: -1
+            });
+
+            // This will attempt to parse the same file again, potentially causing DoS
+            await parser.parseStringPromise(fileContent);
+
+            // If we found any elements from libxmljs2, return them
+            if (Object.keys(result).length > 0) {
+                return result;
+            }
+            
+            // If no specific elements found, return the whole document
+            return { content: xmlDoc.toString() };
+        } catch (error) {
+            console.error('XML parsing error:', error);
+            throw new Error('Failed to parse XML: ' + error.message);
+        }
     } else if (fileExt === '.json') {
         try {
             return JSON.parse(fileContent);

