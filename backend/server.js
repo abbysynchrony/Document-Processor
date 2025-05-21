@@ -2,18 +2,45 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
+const exphbs = require('express-handlebars');
+const { generatePDF } = require('./utils/pdfGenerator');
+const Document = require('./models/Document');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB Atlas'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Set up Handlebars
+const hbs = exphbs.create({
+    extname: '.hbs',
+    defaultLayout: false,
+    helpers: {
+        formatDate: function(date) {
+            return new Date(date).toLocaleString();
+        }
+    }
+});
+
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'templates'));
+
+// MongoDB Connection with retry logic
+const connectWithRetry = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        console.log('Connected to MongoDB Atlas');
+    } catch (err) {
+        console.error('MongoDB connection error:', err);
+        console.log('Retrying connection in 5 seconds...');
+        setTimeout(connectWithRetry, 5000);
+    }
+};
+
+connectWithRetry();
 
 // Import routes
 const uploadRoutes = require('./routes/upload');
@@ -36,6 +63,114 @@ app.use('/api/upload', uploadRoutes);
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
+
+// Helper function to prepare document data
+async function prepareDocumentData(documentId) {
+    if (!documentId) {
+        return {
+            title: 'Sample Document',
+            subtitle: 'This is a test document',
+            metadata: {
+                author: 'John Doe',
+                date: new Date().toISOString(),
+                version: '1.0'
+            },
+            content: 'This is a sample document content. It demonstrates how the PDF generation works with various types of data.\n\nYou can include multiple paragraphs and formatted text here.',
+            generatedAt: new Date().toLocaleString(),
+            documentId: 'DOC-' + Math.random().toString(36).substr(2, 9)
+        };
+    }
+
+    const document = await Document.findById(documentId);
+    if (!document) {
+        throw new Error('Document not found');
+    }
+
+    return {
+        title: document.originalName,
+        subtitle: `Uploaded on ${new Date(document.uploadDate).toLocaleString()}`,
+        metadata: {
+            'File Type': document.fileType,
+            'File Size': `${(document.size / 1024).toFixed(2)} KB`,
+            'Status': document.status
+        },
+        content: formatXmlContent(document.metadata.parsedData),
+        generatedAt: new Date().toLocaleString(),
+        documentId: document._id.toString()
+    };
+}
+
+// Document preview route
+app.get('/document', async (req, res) => {
+    try {
+        const data = await prepareDocumentData(req.query.id);
+        res.render('document', {
+            ...data,
+            showDownloadButton: true
+        });
+    } catch (error) {
+        console.error('Error rendering document:', error);
+        res.status(error.message === 'Document not found' ? 404 : 500)
+           .json({ error: error.message || 'Failed to render document' });
+    }
+});
+
+// PDF download route
+app.get('/document/pdf', async (req, res) => {
+    try {
+        const data = await prepareDocumentData(req.query.id);
+        const pdfBuffer = await generatePDF(data);
+
+        // Get the original filename and replace its extension with .pdf
+        const originalFilename = data.title;
+        const pdfFilename = originalFilename.replace(/\.[^/.]+$/, '.pdf');
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${pdfFilename}"`);
+        res.send(pdfBuffer);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(error.message === 'Document not found' ? 404 : 500)
+           .json({ error: error.message || 'Failed to generate PDF' });
+    }
+});
+
+// Helper function to format XML content
+function formatXmlContent(data) {
+    if (!data) return '';
+
+    // If it's a library of books (from either XML or JSON)
+    if (data.library) {
+        const books = Array.isArray(data.library) ? data.library : 
+                     Array.isArray(data.library.book) ? data.library.book : 
+                     [data.library.book];
+        
+        return books.map(book => `
+            <div class="book-entry">
+                <h3>${book.title}</h3>
+                <p><strong>Author:</strong> ${book.author}</p>
+                <p><strong>Genre:</strong> ${book.genre}</p>
+                <p><strong>Published:</strong> ${book.published}</p>
+                ${book.id ? `<p><strong>ID:</strong> ${book.id}</p>` : ''}
+            </div>
+        `).join('');
+    }
+    
+    // If it's a user profile
+    if (data.user) {
+        return `
+            <div class="user-profile">
+                <h3>User Profile</h3>
+                <p><strong>ID:</strong> ${data.user.id[0]}</p>
+                <p><strong>Name:</strong> ${data.user.name[0]}</p>
+                <p><strong>Email:</strong> ${data.user.email[0]}</p>
+            </div>
+        `;
+    }
+
+    // For other structures, return formatted JSON
+    return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -29,9 +29,9 @@
 - [X] Log metadata to MongoDB
 
 **Thursday, May 22 – Template and PDF Rendering**
-- [ ] Create basic Handlebars template
-- [ ] Generate PDF using `pdfkit` from parsed data
-- [ ] Return generated PDF as response
+- [X] Create basic Handlebars template
+- [X] Generate PDF using `pdfkit` from parsed data
+- [X] Return generated PDF as response
 
 ---
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Processed Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .download-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .download-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{title}}</h1>
+        {{#if subtitle}}<h2>{{subtitle}}</h2>{{/if}}
+    </div>
+
+    <div class="content">
+        {{#if metadata}}
+        <div class="metadata">
+            <h3>Document Information</h3>
+            <ul>
+                {{#each metadata}}
+                <li><strong>{{@key}}:</strong> {{this}}</li>
+                {{/each}}
+            </ul>
+        </div>
+        {{/if}}
+
+        {{#if content}}
+        <div class="main-content">
+            {{{content}}}
+        </div>
+        {{/if}}
+    </div>
+
+    {{#if showDownloadButton}}
+    <div style="text-align: center;">
+        <a href="/document/pdf?id={{documentId}}" class="download-button">Download PDF</a>
+    </div>
+    {{/if}}
+
+    <div class="footer">
+        <p>Generated on {{generatedAt}}</p>
+        {{#if documentId}}<p>Document ID: {{documentId}}</p>{{/if}}
+    </div>
+</body>
+</html> 

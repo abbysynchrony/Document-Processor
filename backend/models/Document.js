@@ -28,8 +28,9 @@ const documentSchema = new mongoose.Schema({
         default: 'pending'
     },
     metadata: {
-        type: Map,
-        of: mongoose.Schema.Types.Mixed
+        parsedData: {
+            type: mongoose.Schema.Types.Mixed
+        }
     }
 });
 
