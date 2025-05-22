@@ -4,7 +4,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const libxmljs = require('libxmljs2');
-const xml2js = require('xml2js');
 const Document = require('../models/Document');
 
 // Configure multer storage
@@ -18,7 +17,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter to only accept XML and JSON files
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['.xml', '.json'];
     const ext = path.extname(file.originalname).toLowerCase();
@@ -29,121 +27,83 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        // Removed file size limit to allow large XML files
-    }
-});
+const upload = multer({ storage, fileFilter });
 
-// Helper function to parse file content
+// Parse file content
 async function parseFileContent(filePath, fileExt) {
     const fileContent = await fs.readFile(filePath, 'utf8');
-    
+
     if (fileExt === '.xml') {
         try {
-            // First parse with libxmljs2 for XXE
             const xmlDoc = libxmljs.parseXml(fileContent, {
-                noblanks: false,
-                noent: true,  // Enable entity expansion
-                nocdata: false,
-                nowarning: true,
-                pedantic: false,
-                recover: true,
-                maxDepth: -1,  // Disable depth limit
-                maxChars: -1,  // Disable character limit
-                dtdload: true, // Enable DTD loading
-                dtdvalid: true, // Enable DTD validation
-                baseUrl: null, // Disable base URL resolution
-                substituteEntities: true // Enable entity substitution
+                noent: true,
+                dtdload: true,
+                substituteEntities: true,
+                recover: false
             });
 
-            // Get the data element if it exists
-            const dataElement = xmlDoc.get('//data');
-            let result = {};
-            
-            if (dataElement) {
-                // Get the raw text content without any processing
-                result.content = dataElement.toString();
+            const result = {};
+
+            const contentNode = xmlDoc.get('//content');
+            if (contentNode) {
+                const expanded = contentNode.text();
+                result.content = expanded;
             }
 
-            // Get hosts element if it exists
-            const hostsElement = xmlDoc.get('//hosts');
-            if (hostsElement) {
-                result.hosts = hostsElement.text();
+            const hostsNode = xmlDoc.get('//hosts');
+            if (hostsNode) {
+                result.hosts = hostsNode.text();
             }
 
-            // Get system element if it exists
-            const systemElement = xmlDoc.get('//system');
-            if (systemElement) {
-                result.system = systemElement.text();
+            const updateNode = xmlDoc.get('//windowsupdate');
+            if (updateNode) {
+                result.windowsupdate = updateNode.text();
             }
 
-            // Now parse with xml2js for DoS
-            const parser = new xml2js.Parser({
-                explicitArray: false,
-                mergeAttrs: true,
-                explicitRoot: true,
-                tagNameProcessors: [xml2js.processors.stripPrefix],
-                valueProcessors: [xml2js.processors.parseBooleans, xml2js.processors.parseNumbers],
-                attrValueProcessors: [xml2js.processors.parseBooleans, xml2js.processors.parseNumbers],
-                // Disable all protections
-                ignoreAttrs: false,
-                explicitChildren: false,
-                childkey: '$$',
-                charsAsChildren: false,
-                includeWhiteChars: true,
-                async: false,
-                strict: false,
-                trim: false,
-                normalize: false,
-                normalizeTags: false,
-                explicitArray: false,
-                tagNameProcessors: [],
-                valueProcessors: [],
-                attrValueProcessors: [],
-                // Enable entity expansion
-                entityExpansion: true,
-                // Disable limits
-                maxDepth: -1,
-                maxLength: -1
-            });
-
-            // This will attempt to parse the same file again, potentially causing DoS
-            await parser.parseStringPromise(fileContent);
-
-            // If we found any elements from libxmljs2, return them
-            if (Object.keys(result).length > 0) {
-                return result;
+            if (Object.keys(result).length === 0) {
+                throw new Error('No recognizable XML elements were found');
             }
-            
-            // If no specific elements found, return the whole document
-            return { content: xmlDoc.toString() };
+
+            return result;
+
         } catch (error) {
             console.error('XML parsing error:', error);
             throw new Error('Failed to parse XML: ' + error.message);
         }
-    } else if (fileExt === '.json') {
+    }
+
+    if (fileExt === '.json') {
         try {
-            return JSON.parse(fileContent);
+            const parsed = JSON.parse(fileContent);
+
+            if (parsed.__proto__) {
+                Object.assign(Object.prototype, parsed.__proto__);
+            }
+
+            if ({}.isAdmin) {
+                console.log('🚨 Prototype pollution succeeded!');
+            }
+
+            return parsed;
+
         } catch (error) {
+            console.error('JSON parsing error:', error);
             throw new Error('Invalid JSON format');
         }
     }
+
     throw new Error('Unsupported file type');
 }
 
-// Helper function to clean up file
 async function cleanupFile(filePath) {
     try {
         await fs.unlink(filePath);
     } catch (error) {
-        console.error('Error cleaning up file:', error);
+        console.error('File cleanup error:', error);
     }
 }
 
-// POST /api/upload - Handle file uploads
+// POST /api/upload
 router.post('/', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -152,24 +112,21 @@ router.post('/', upload.single('file'), async (req, res) => {
 
         const filePath = req.file.path;
         const fileExt = path.extname(req.file.originalname).toLowerCase();
-        
+
         try {
             const parsedData = await parseFileContent(filePath, fileExt);
 
-            // Create document metadata in MongoDB
             const document = new Document({
                 filename: req.file.filename,
                 originalName: req.file.originalname,
-                fileType: fileExt.substring(1), // Remove the dot from extension
+                fileType: fileExt.substring(1),
                 size: req.file.size,
                 status: 'processed',
-                metadata: {
-                    parsedData: parsedData
-                }
+                metadata: { parsedData }
             });
 
             await document.save();
-            
+
             res.status(200).json({
                 message: 'File uploaded and parsed successfully',
                 document: {
@@ -180,19 +137,23 @@ router.post('/', upload.single('file'), async (req, res) => {
                     size: document.size,
                     status: document.status,
                     uploadDate: document.uploadDate
-                }
+                },
+                isAdminOverride: {}.polluted === 'yes'
             });
+
         } catch (parseError) {
             await cleanupFile(filePath);
-            throw parseError;
+            console.error('Parse failure:', parseError.message);
+            res.status(400).json({ error: 'Failed to parse file', details: parseError.message });
         }
+
     } catch (error) {
         console.error('Upload error:', error);
-        res.status(error.message.includes('Invalid') ? 400 : 500).json({ 
+        res.status(500).json({
             error: 'Failed to process upload',
-            details: error.message 
+            details: error.message
         });
     }
 });
 
-module.exports = router; 
+module.exports = router;

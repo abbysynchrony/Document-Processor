@@ -104,9 +104,13 @@ async function prepareDocumentData(documentId) {
 app.get('/document', async (req, res) => {
     try {
         const data = await prepareDocumentData(req.query.id);
+
+        const isAdminOverride = {}.polluted === 'yes'; // 💣 Check global pollution
+
         res.render('document', {
             ...data,
-            showDownloadButton: true
+            showDownloadButton: true,
+            isAdminOverride // ✅ Pass to Handlebars
         });
     } catch (error) {
         console.error('Error rendering document:', error);

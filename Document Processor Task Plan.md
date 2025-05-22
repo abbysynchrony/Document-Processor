@@ -46,8 +46,8 @@
 
 **Monday, May 26 – Introduce XML & JSON Vulnerabilities**
 - [X] Inject XXE vulnerability using `xml2js` (unrestricted parsing)
-- [ ] Allow large/recursive XML (for DoS simulation)
-- [ ] Add JSON deserialization vulnerability (`JSON.parse` with unsafe inputs)
+- [X] Allow large/recursive XML (for DoS simulation)
+- [X] Add JSON deserialization vulnerability (`JSON.parse` with unsafe inputs)
 
 **Tuesday, May 27 – JSON Testing and Documentation**
 - [ ] Create malformed JSON payloads for deserialization attacks

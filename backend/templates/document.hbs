@@ -212,6 +212,11 @@
     </style>
 </head>
 <body>
+    {{#if isAdminOverride}}
+        <div class="admin-warning" style="color: red; font-weight: bold; padding: 1rem; border: 2px dashed red; margin-bottom: 1rem;">
+            🚨 ADMIN OVERRIDE ENABLED
+        </div>
+    {{/if}}
     <div class="container">
         <div class="card">
             <div class="header">

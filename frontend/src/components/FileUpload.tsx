@@ -30,12 +30,27 @@ const FileUpload: React.FC = () => {
 
             const data = await response.json();
 
+            if (data.isAdminOverride) {
+                console.log('🚨 Admin override enabled via prototype pollution');
+              }
+              
+              console.log('RAW upload response:', data);
+              
+              setTimeout(() => {
+                window.location.href = `http://localhost:5001/document?id=${data.document.id}`;
+              }, 500); // Wait half a second to allow logs
+
             if (!response.ok) {
                 throw new Error(data.error || 'Upload failed');
             }
 
+
             setUploadStatus('Upload successful!');
             // Redirect to document preview
+            if (!response.ok || !data.document || !data.document.id) {
+                throw new Error(data.error || 'Upload failed or malformed response');
+              }
+              
             window.location.href = `http://localhost:5001/document?id=${data.document.id}`;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed');

