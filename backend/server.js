@@ -104,18 +104,20 @@ async function prepareDocumentData(documentId) {
 app.get('/document', async (req, res) => {
     try {
         const data = await prepareDocumentData(req.query.id);
+        const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
 
-        const isAdminOverride = {}.polluted === 'yes'; // 💣 Check global pollution
+        const template = {}.templateName || 'document'; // 💣 vulnerable to prototype pollution
 
-        res.render('document', {
+        console.log('[DEBUG] Rendering template:', template);
+
+        res.render(template, {
             ...data,
             showDownloadButton: true,
-            isAdminOverride // ✅ Pass to Handlebars
+            isAdminOverride
         });
     } catch (error) {
         console.error('Error rendering document:', error);
-        res.status(error.message === 'Document not found' ? 404 : 500)
-           .json({ error: error.message || 'Failed to render document' });
+        res.status(500).send('Rendering failed: ' + error.message);
     }
 });
 
@@ -137,6 +139,11 @@ app.get('/document/pdf', async (req, res) => {
         res.status(error.message === 'Document not found' ? 404 : 500)
            .json({ error: error.message || 'Failed to generate PDF' });
     }
+});
+
+app.get('/pollution-check', (req, res) => {
+    const isPolluted = [].isArrayPolluted === true;
+    res.render('prototype-check', { isPolluted });
 });
 
 // Helper function to format XML content

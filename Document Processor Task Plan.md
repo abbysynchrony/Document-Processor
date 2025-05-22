@@ -50,7 +50,7 @@
 - [X] Add JSON deserialization vulnerability (`JSON.parse` with unsafe inputs)
 
 **Tuesday, May 27 – JSON Testing and Documentation**
-- [ ] Create malformed JSON payloads for deserialization attacks
+- [X] Create malformed JSON payloads for deserialization attacks
 - [ ] Peer-review the insecure code
 - [ ] Begin documenting vulnerabilities in GitHub Issues
 

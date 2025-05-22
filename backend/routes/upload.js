@@ -80,9 +80,14 @@ async function parseFileContent(filePath, fileExt) {
                 Object.assign(Object.prototype, parsed.__proto__);
             }
 
-            if ({}.isAdmin) {
-                console.log('🚨 Prototype pollution succeeded!');
+            // Check for both pollution indicators
+            if ({}.polluted) {
+                console.log("🚨 Prototype pollution succeeded with 'polluted'!");
             }
+            if ({}.isAdmin) {
+                console.log("🚨 Prototype pollution succeeded with 'isAdmin'!");
+            }
+            console.log('[DEBUG] [].isArrayPolluted =', [].isArrayPolluted);
 
             return parsed;
 
@@ -138,7 +143,7 @@ router.post('/', upload.single('file'), async (req, res) => {
                     status: document.status,
                     uploadDate: document.uploadDate
                 },
-                isAdminOverride: {}.polluted === 'yes'
+                isAdminOverride: {}.polluted === 'yes' || {}.isAdmin === true
             });
 
         } catch (parseError) {
