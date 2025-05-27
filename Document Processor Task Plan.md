@@ -51,13 +51,12 @@
 
 **Tuesday, May 27 – JSON Testing and Documentation**
 - [X] Create malformed JSON payloads for deserialization attacks
-- [ ] Peer-review the insecure code
-- [ ] Begin documenting vulnerabilities in GitHub Issues
-
+- [X] Peer-review the insecure code
+- [X] Begin documenting vulnerabilities in GitHub Issues
 **Wednesday, May 28 – Templating and Path Vulnerabilities**
-- [ ] Start integrating SSTI via Handlebars templates
-- [ ] Create export path vulnerability (`../../etc/passwd` case)
-- [ ] Test Handlebars with dangerous expressions like `{{#with "constructor"}}`
+- [X] Start integrating SSTI via Handlebars templates
+- [X] Create export path vulnerability (`../../etc/passwd` case)
+- [X] Test Handlebars with dangerous expressions like `{{#with "constructor"}}`
 
 **Thursday, May 29 – Offensive Testing with Security Tools**
 - [ ] Start offensive testing using:
@@ -82,25 +81,14 @@
 
 ### Daily Tasks:
 
-**Monday, June 2 – XML and JSON Hardening**
-- [ ] Mitigate XXE: set `noent: true` and test
-- [ ] Add `maxDepth` and `maxChars` limits to prevent XML DoS
-- [ ] Secure JSON deserialization with `safe-parse` or similar
-
-**Tuesday, June 3 – Template and Filesystem Hardening**
-- [ ] Escape and sanitize all Handlebars inputs
-- [ ] Restrict filesystem access to `/uploads` using `path.normalize()`
-- [ ] Retest SSTI and traversal after fixes
 
 **Wednesday, June 4 – Logging and Frontend Deployment**
 - [ ] Integrate `Winston` or similar for structured logging
-- [ ] Set up error alerting on repeated parsing failures
 - [ ] Deploy frontend on GitHub Pages
 
 **Thursday, June 5 – Final Backend Deployment and Testing**
 - [ ] Deploy backend and MongoDB via Railway.app
 - [ ] Perform full system test (upload → parse → generate PDF)
-- [ ] Validate that patched vulnerabilities no longer work
 
 **Friday, June 6 – Final Report and Live Demo**
 - [ ] Finalize and submit the incident response report

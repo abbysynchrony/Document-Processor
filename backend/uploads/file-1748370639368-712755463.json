@@ -1,0 +1,7 @@
+{
+    "template": "{{x.exposedToString}}",
+    "context": {
+      "x": {}
+    }
+  }
+  

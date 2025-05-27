@@ -1,0 +1,6 @@
+{
+    "template": "{{#with this.constructor}}{{#with prototype}}{{toString}}{{/with}}{{/with}}",
+    "context": {
+      "foo": "bar"
+    }
+  }

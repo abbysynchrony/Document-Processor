@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
+const handlebars = require('handlebars');
 const exphbs = require('express-handlebars');
+const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
 const { generatePDF } = require('./utils/pdfGenerator');
 const Document = require('./models/Document');
 require('dotenv').config();
@@ -10,8 +12,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Set up Handlebars
+// 🔓 Set up Handlebars with prototype access enabled
+const insecureHandlebars = allowInsecurePrototypeAccess(handlebars);
+
 const hbs = exphbs.create({
+    handlebars: insecureHandlebars,
     extname: '.hbs',
     defaultLayout: false,
     helpers: {
@@ -44,6 +49,7 @@ connectWithRetry();
 
 // Import routes
 const uploadRoutes = require('./routes/upload');
+const exportRoutes = require('./routes/export');
 
 // Middleware
 app.use(cors());
@@ -58,8 +64,9 @@ if (!require('fs').existsSync(uploadsDir)) {
 
 // Routes
 app.use('/api/upload', uploadRoutes);
+app.use('/api/export', exportRoutes);
 
-// Basic route for testing
+// Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
@@ -127,7 +134,6 @@ app.get('/document/pdf', async (req, res) => {
         const data = await prepareDocumentData(req.query.id);
         const pdfBuffer = await generatePDF(data);
 
-        // Get the original filename and replace its extension with .pdf
         const originalFilename = data.title;
         const pdfFilename = originalFilename.replace(/\.[^/.]+$/, '.pdf');
 
@@ -146,14 +152,13 @@ app.get('/pollution-check', (req, res) => {
     res.render('prototype-check', { isPolluted });
 });
 
-// Helper function to format XML content
+// Helper to format content from XML/JSON
 function formatXmlContent(data) {
     if (!data) return '';
 
-    // If it's a library of books (from either XML or JSON)
     if (data.library) {
-        const books = Array.isArray(data.library) ? data.library : 
-                     Array.isArray(data.library.book) ? data.library.book : 
+        const books = Array.isArray(data.library) ? data.library :
+                     Array.isArray(data.library.book) ? data.library.book :
                      [data.library.book];
         
         return books.map(book => `
@@ -166,8 +171,7 @@ function formatXmlContent(data) {
             </div>
         `).join('');
     }
-    
-    // If it's a user profile
+
     if (data.user) {
         return `
             <div class="user-profile">
@@ -179,11 +183,10 @@ function formatXmlContent(data) {
         `;
     }
 
-    // For other structures, return formatted JSON
     return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
 
-// Error handling middleware
+// Global error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
@@ -191,4 +194,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});

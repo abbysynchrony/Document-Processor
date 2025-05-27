@@ -5,6 +5,9 @@ const path = require('path');
 const fs = require('fs').promises;
 const libxmljs = require('libxmljs2');
 const Document = require('../models/Document');
+const handlebars = require('handlebars');
+const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
+const insecureHandlebars = allowInsecurePrototypeAccess(handlebars);
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -75,22 +78,45 @@ async function parseFileContent(filePath, fileExt) {
     if (fileExt === '.json') {
         try {
             const parsed = JSON.parse(fileContent);
-
+    
+            // 🔥 Prototype pollution check
             if (parsed.__proto__) {
                 Object.assign(Object.prototype, parsed.__proto__);
             }
-
-            // Check for both pollution indicators
+    
             if ({}.polluted) {
                 console.log("🚨 Prototype pollution succeeded with 'polluted'!");
             }
             if ({}.isAdmin) {
                 console.log("🚨 Prototype pollution succeeded with 'isAdmin'!");
             }
-            console.log('[DEBUG] [].isArrayPolluted =', [].isArrayPolluted);
-
+    
+            // 🔓 Add a safe way to expose toString() function to SSTI
+            if (!Object.prototype.hasOwnProperty('exposedToString')) {
+                Object.defineProperty(Object.prototype, 'exposedToString', {
+                    get: function () {
+                        return this.toString.toString(); // ← call .toString() on the function itself
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            
+    
+            // 🔥 Check if it's an SSTI payload
+            if (parsed.template && parsed.context) {
+                console.log('🔍 TEMPLATE INPUT:', parsed.template);
+                console.log('🔍 CONTEXT INPUT:', parsed.context);
+            
+                const compiled = insecureHandlebars.compile(parsed.template);
+                const renderedOutput = compiled(parsed.context);
+            
+                console.log("🚨 SSTI template rendered output:", renderedOutput);
+            
+                parsed.rendered = renderedOutput;
+            }
+    
             return parsed;
-
         } catch (error) {
             console.error('JSON parsing error:', error);
             throw new Error('Invalid JSON format');
@@ -143,7 +169,8 @@ router.post('/', upload.single('file'), async (req, res) => {
                     status: document.status,
                     uploadDate: document.uploadDate
                 },
-                isAdminOverride: {}.polluted === 'yes' || {}.isAdmin === true
+                isAdminOverride: {}.polluted === 'yes' || {}.isAdmin === true,
+                rendered: parsedData.rendered || null 
             });
 
         } catch (parseError) {

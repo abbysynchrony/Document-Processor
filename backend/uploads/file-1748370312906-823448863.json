@@ -1,0 +1,6 @@
+{
+    "template": "{{x.toString}}",
+    "context": {
+      "x": {}
+    }
+  }
