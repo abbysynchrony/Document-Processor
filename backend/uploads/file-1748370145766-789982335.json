@@ -1,6 +1,0 @@
-{
-    "template": "{{#with x}}{{constructor}}{{/with}}",
-    "context": {
-      "x": {}
-    }
-  }

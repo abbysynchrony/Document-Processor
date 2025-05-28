@@ -112,6 +112,7 @@ app.get('/document', async (req, res) => {
     try {
         const data = await prepareDocumentData(req.query.id);
         const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
+        const isArrayPolluted = [].isArrayPolluted === true;
 
         const template = {}.templateName || 'document'; // 💣 vulnerable to prototype pollution
 
@@ -120,7 +121,8 @@ app.get('/document', async (req, res) => {
         res.render(template, {
             ...data,
             showDownloadButton: true,
-            isAdminOverride
+            isAdminOverride,
+            isArrayPolluted
         });
     } catch (error) {
         console.error('Error rendering document:', error);
@@ -149,17 +151,20 @@ app.get('/document/pdf', async (req, res) => {
 
 app.get('/pollution-check', (req, res) => {
     const isPolluted = [].isArrayPolluted === true;
-    res.render('prototype-check', { isPolluted });
+    res.render('pollution-check', { isPolluted });
 });
 
 // Helper to format content from XML/JSON
 function formatXmlContent(data) {
     if (!data) return '';
 
-    if (data.library) {
-        const books = Array.isArray(data.library) ? data.library :
-                     Array.isArray(data.library.book) ? data.library.book :
-                     [data.library.book];
+    // 🔥 Vulnerable to prototype pollution - using direct property access
+    const library = data.library || (data.parsedData && data.parsedData.library);
+    if (library) {
+        // 🔥 Vulnerable to prototype pollution - using Array.isArray
+        const books = Array.isArray(library) ? library :
+                     Array.isArray(library.book) ? library.book :
+                     [library.book];
         
         return books.map(book => `
             <div class="book-entry">
@@ -172,6 +177,7 @@ function formatXmlContent(data) {
         `).join('');
     }
 
+    // 🔥 Vulnerable to prototype pollution - using direct property access
     if (data.user) {
         return `
             <div class="user-profile">
@@ -183,6 +189,7 @@ function formatXmlContent(data) {
         `;
     }
 
+    // 🔥 Vulnerable to prototype pollution - using JSON.stringify
     return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
 

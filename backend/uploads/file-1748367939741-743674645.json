@@ -1,4 +1,0 @@
-{
-    "template": "{{lookup (lookup this \"constructor\") \"prototype\"}}",
-    "context": {}
-  }

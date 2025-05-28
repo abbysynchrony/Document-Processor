@@ -1,6 +1,0 @@
-{
-    "template": "Hello {{x}}",
-    "context": {
-      "x": "world"
-    }
-  }

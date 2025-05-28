@@ -1,8 +1,0 @@
-{
-    "__proto__": {
-      "isAdmin": true,
-      "templateName": "malicious-template"
-    },
-    "content": "This is a normal content field"
-  }
-  

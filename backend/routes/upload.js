@@ -79,49 +79,51 @@ async function parseFileContent(filePath, fileExt) {
         try {
             const parsed = JSON.parse(fileContent);
     
-            // 🔥 Prototype pollution check
+            // 🛡 Safely remove existing property before polluting
+            if (
+                parsed.__proto__ &&
+                Object.prototype.hasOwnProperty('exposedToString') &&
+                Object.getOwnPropertyDescriptor(Object.prototype, 'exposedToString').configurable
+            ) {
+                delete Object.prototype.exposedToString;
+            }
+    
+            // 🔥 Apply prototype pollution if present
             if (parsed.__proto__) {
                 Object.assign(Object.prototype, parsed.__proto__);
             }
     
-            if ({}.polluted) {
-                console.log("🚨 Prototype pollution succeeded with 'polluted'!");
-            }
-            if ({}.isAdmin) {
-                console.log("🚨 Prototype pollution succeeded with 'isAdmin'!");
-            }
-    
-            // 🔓 Add a safe way to expose toString() function to SSTI
+            // 🔓 Inject exposedToString only if it's not already there
             if (!Object.prototype.hasOwnProperty('exposedToString')) {
                 Object.defineProperty(Object.prototype, 'exposedToString', {
                     get: function () {
-                        return this.toString.toString(); // ← call .toString() on the function itself
+                        return this.toString.toString();
                     },
                     enumerable: true,
-                    configurable: true
+                    configurable: true // critical for future cleanup
                 });
             }
-            
     
-            // 🔥 Check if it's an SSTI payload
+            // ✅ Check for SSTI payload
             if (parsed.template && parsed.context) {
                 console.log('🔍 TEMPLATE INPUT:', parsed.template);
                 console.log('🔍 CONTEXT INPUT:', parsed.context);
-            
+    
                 const compiled = insecureHandlebars.compile(parsed.template);
                 const renderedOutput = compiled(parsed.context);
-            
+    
                 console.log("🚨 SSTI template rendered output:", renderedOutput);
-            
+    
                 parsed.rendered = renderedOutput;
             }
     
             return parsed;
+    
         } catch (error) {
             console.error('JSON parsing error:', error);
             throw new Error('Invalid JSON format');
         }
-    }
+    }    
 
     throw new Error('Unsupported file type');
 }

@@ -1,6 +1,0 @@
-{
-    "template": "{{x.constructor}}",
-    "context": {
-      "x": 1
-    }
-  }
