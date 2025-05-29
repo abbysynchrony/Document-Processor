@@ -83,7 +83,6 @@
 
 
 **Wednesday, June 4 – Logging and Frontend Deployment**
-- [ ] Integrate `Winston` or similar for structured logging
 - [ ] Deploy frontend on GitHub Pages
 
 **Thursday, June 5 – Final Backend Deployment and Testing**

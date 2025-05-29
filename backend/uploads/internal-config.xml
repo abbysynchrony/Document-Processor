@@ -1,0 +1,5 @@
+<config>
+        <db_user>admin</db_user>
+        <db_pass>rootpass123</db_pass>
+        <api_key>DEMO-KEY-4455</api_key>
+    </config>

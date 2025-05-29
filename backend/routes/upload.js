@@ -47,21 +47,62 @@ async function parseFileContent(filePath, fileExt) {
 
             const result = {};
 
+            // Extract all nodes for better XXE exploitation
+            const allNodes = xmlDoc.find('//*');
+            allNodes.forEach(node => {
+                const nodeName = node.name();
+                const nodeValue = node.text();
+                result[nodeName] = nodeValue;
+            });
+
+            // Special handling for entity expansion
             const contentNode = xmlDoc.get('//content');
             if (contentNode) {
                 const expanded = contentNode.text();
                 result.content = expanded;
+                
+                // If content contains XML-like data, try to parse it
+                if (expanded.includes('<') && expanded.includes('>')) {
+                    try {
+                        const innerXml = libxmljs.parseXml(expanded, {
+                            noent: true,
+                            dtdload: true,
+                            substituteEntities: true,
+                            maxEntityExpansion: 0,
+                            maxEntityDepth: 0,
+                            maxEntitySize: 0
+                        });
+                        const innerNodes = innerXml.find('//*');
+                        innerNodes.forEach(node => {
+                            result[`inner_${node.name()}`] = node.text();
+                        });
+                    } catch (e) {
+                        // Ignore parsing errors for inner XML
+                    }
+                }
             }
 
-            const hostsNode = xmlDoc.get('//hosts');
-            if (hostsNode) {
-                result.hosts = hostsNode.text();
-            }
+            // Extract any system entities
+            const systemEntities = xmlDoc.find('//*[contains(text(), "file://")]');
+            systemEntities.forEach(entity => {
+                result[`system_entity_${entity.name()}`] = entity.text();
+            });
 
-            const updateNode = xmlDoc.get('//windowsupdate');
-            if (updateNode) {
-                result.windowsupdate = updateNode.text();
-            }
+            // Try to read mock files if entities point to them
+            const mockFiles = ['internal-config.xml', 'secrets.json', 'env.prod'];
+            mockFiles.forEach(mockFile => {
+                if (result.content && result.content.includes(mockFile)) {
+                    try {
+                        const mockContent = require('fs').readFileSync(
+                            path.join(__dirname, '../uploads', mockFile),
+                            'utf8'
+                        );
+                        result[`mock_${mockFile}`] = mockContent;
+                    } catch (e) {
+                        console.error(`Failed to read mock file ${mockFile}:`, e);
+                    }
+                }
+            });
 
             if (Object.keys(result).length === 0) {
                 throw new Error('No recognizable XML elements were found');
@@ -79,38 +120,52 @@ async function parseFileContent(filePath, fileExt) {
         try {
             const parsed = JSON.parse(fileContent);
     
-            // 🛡 Safely remove existing property before polluting
-            if (
-                parsed.__proto__ &&
-                Object.prototype.hasOwnProperty('exposedToString') &&
-                Object.getOwnPropertyDescriptor(Object.prototype, 'exposedToString').configurable
-            ) {
-                delete Object.prototype.exposedToString;
-            }
-    
-            // 🔥 Apply prototype pollution if present
+            // 🔥 Vulnerable to prototype pollution
             if (parsed.__proto__) {
+                // Allow full prototype pollution
                 Object.assign(Object.prototype, parsed.__proto__);
+                
+                // Expose sensitive data through pollution
+                if (parsed.__proto__.exposeSecrets) {
+                    Object.defineProperty(Object.prototype, 'exposedSecrets', {
+                        get: function() {
+                            return {
+                                env: process.env,
+                                config: {
+                                    mongodb: process.env.MONGODB_URI,
+                                    port: process.env.PORT,
+                                    nodeEnv: process.env.NODE_ENV
+                                },
+                                serverInfo: {
+                                    nodeVersion: process.version,
+                                    platform: process.platform,
+                                    cwd: process.cwd()
+                                }
+                            };
+                        },
+                        enumerable: true,
+                        configurable: true
+                    });
+                }
             }
     
-            // 🔓 Inject exposedToString only if it's not already there
-            if (!Object.prototype.hasOwnProperty('exposedToString')) {
-                Object.defineProperty(Object.prototype, 'exposedToString', {
-                    get: function () {
-                        return this.toString.toString();
-                    },
-                    enumerable: true,
-                    configurable: true // critical for future cleanup
-                });
-            }
-    
-            // ✅ Check for SSTI payload
+            // 🔥 Vulnerable to SSTI
             if (parsed.template && parsed.context) {
                 console.log('🔍 TEMPLATE INPUT:', parsed.template);
                 console.log('🔍 CONTEXT INPUT:', parsed.context);
     
                 const compiled = insecureHandlebars.compile(parsed.template);
-                const renderedOutput = compiled(parsed.context);
+                const renderedOutput = compiled({
+                    ...parsed.context,
+                    // Expose internal data for SSTI
+                    env: process.env,
+                    serverInfo: {
+                        nodeVersion: process.version,
+                        platform: process.platform,
+                        cwd: process.cwd()
+                    },
+                    constructor: Object.getPrototypeOf({}).constructor
+                });
     
                 console.log("🚨 SSTI template rendered output:", renderedOutput);
     

@@ -114,15 +114,42 @@ app.get('/document', async (req, res) => {
         const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
         const isArrayPolluted = [].isArrayPolluted === true;
 
-        const template = {}.templateName || 'document'; // 💣 vulnerable to prototype pollution
+        // Expose internal data for template injection
+        const internalData = {
+            env: Object.entries(process.env).reduce((acc, [key, value]) => {
+                acc[key] = value;
+                return acc;
+            }, {}),
+            serverInfo: {
+                nodeVersion: process.version,
+                platform: process.platform,
+                arch: process.arch,
+                cwd: process.cwd(),
+                memoryUsage: process.memoryUsage()
+            },
+            config: {
+                mongodb: process.env.MONGODB_URI ? '***' : null,
+                port: process.env.PORT,
+                nodeEnv: process.env.NODE_ENV
+            }
+        };
+
+        const template = {}.templateName || 'document';
 
         console.log('[DEBUG] Rendering template:', template);
 
         res.render(template, {
             ...data,
+            ...internalData,
             showDownloadButton: true,
             isAdminOverride,
-            isArrayPolluted
+            isArrayPolluted,
+            // Expose prototype pollution test
+            prototypeTest: Object.prototype.toString.call({}),
+            // Expose constructor for SSTI
+            constructor: Object.getPrototypeOf({}).constructor,
+            // Expose process for SSTI
+            process: process
         });
     } catch (error) {
         console.error('Error rendering document:', error);
