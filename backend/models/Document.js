@@ -27,6 +27,11 @@ const documentSchema = new mongoose.Schema({
         enum: ['pending', 'processed', 'error'],
         default: 'pending'
     },
+    vulnType: {
+        type: String,
+        enum: ['ssti', 'template', 'xxe', 'dos', 'traversal', 'pollution', 'logging', null],
+        default: null
+    },
     metadata: {
         parsedData: {
             type: mongoose.Schema.Types.Mixed

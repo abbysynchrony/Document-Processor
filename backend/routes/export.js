@@ -47,6 +47,11 @@ router.get('/', async (req, res) => {
         return res.status(400).json({ error: 'Missing file parameter' });
     }
 
+    // Detect path traversal attempt
+    if (fileParam.includes('..')) {
+        res.locals.vulnType = 'traversal';
+    }
+
     // Vulnerable: no sanitization or base path enforcement
     const targetPath = path.join(__dirname, '../uploads', fileParam);
 

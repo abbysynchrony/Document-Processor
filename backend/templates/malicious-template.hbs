@@ -2,9 +2,107 @@
 <html>
 <head>
   <title>🚨 Hijacked Template</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      background-color: #282c34;
+      color: #ffffff;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .vuln-info {
+      background-color: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      color: #92400e;
+    }
+    .vuln-meta {
+      display: flex;
+      gap: 1rem;
+      margin: 0.5rem 0;
+    }
+    .vuln-meta span {
+      background-color: #fbbf24;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+    .exposed-data {
+      background: #1f2937;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+    }
+    .exposed-data pre {
+      color: #61dafb;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      font-family: 'Consolas', monospace;
+    }
+    .exposed-data .key {
+      color: #9cdcfe;
+    }
+    .exposed-data .string {
+      color: #ce9178;
+    }
+    .exposed-data .number {
+      color: #b5cea8;
+    }
+  </style>
 </head>
 <body>
   <h1 style="color:red;">🚨 This is a malicious template override!</h1>
-  <p>The application has been tricked into rendering this page using prototype pollution.</p>
+  
+  <div class="vuln-info">
+    <h2>Template Injection via Unsanitized Input</h2>
+    <div class="vuln-meta">
+      <span>CWE-95</span>
+      <span>OWASP A03: Injection</span>
+    </div>
+    <p>Renders user-controlled templates, allowing logic injection that can expose process internals and system secrets.</p>
+  </div>
+
+  <p style="color: #ef4444; font-weight: bold;">The application has been tricked into rendering this page using prototype pollution.</p>
+  
+  <div class="exposed-data">
+    <h3>Exposed Data:</h3>
+    <pre>
+<span class="key">Environment Variables:</span>
+{
+  <span class="key">"NODE_ENV"</span>: <span class="string">"development"</span>,
+  <span class="key">"MONGODB_URI"</span>: <span class="string">"mongodb://admin:rootpass123@localhost:27017/documents"</span>,
+  <span class="key">"JWT_SECRET"</span>: <span class="string">"super-secret-jwt-key-123"</span>,
+  <span class="key">"AWS_ACCESS_KEY"</span>: <span class="string">"AKIAXXXXXXXXXXXXXXXX"</span>,
+  <span class="key">"AWS_SECRET_KEY"</span>: <span class="string">"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>,
+  <span class="key">"REDIS_URL"</span>: <span class="string">"redis://localhost:6379"</span>
+}
+
+<span class="key">Server Information:</span>
+{
+  <span class="key">"nodeVersion"</span>: <span class="string">"v16.14.0"</span>,
+  <span class="key">"platform"</span>: <span class="string">"linux"</span>,
+  <span class="key">"arch"</span>: <span class="string">"x64"</span>,
+  <span class="key">"cwd"</span>: <span class="string">"/app"</span>,
+  <span class="key">"memoryUsage"</span>: {
+    <span class="key">"heapTotal"</span>: <span class="number">12345678</span>,
+    <span class="key">"heapUsed"</span>: <span class="number">5678901</span>,
+    <span class="key">"external"</span>: <span class="number">123456</span>
+  }
+}
+
+<span class="key">Constructor Information:</span>
+{
+  <span class="key">"name"</span>: <span class="string">"Object"</span>,
+  <span class="key">"prototype"</span>: {
+    <span class="key">"constructor"</span>: <span class="string">"[Function: Object]"</span>,
+    <span class="key">"hasOwnProperty"</span>: <span class="string">"[Function: hasOwnProperty]"</span>,
+    <span class="key">"toString"</span>: <span class="string">"[Function: toString]"</span>
+  }
+}</pre>
+  </div>
 </body>
 </html> 

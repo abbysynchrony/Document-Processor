@@ -209,29 +209,77 @@
                 justify-content: center;
             }
         }
+
+        .vuln-alert {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: #92400e;
+        }
+
+        .vuln-alert h3 {
+            color: #92400e;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vuln-alert .vuln-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .vuln-alert .vuln-meta span {
+            background-color: #fbbf24;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .vuln-alert .vuln-description {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
+    {{#if vulnInfo}}
+    <div class="vuln-alert">
+        <h3>🚨 Vulnerability Detected: {{vulnInfo.name}}</h3>
+        <div class="vuln-meta">
+            <span>{{vulnInfo.cwe}}</span>
+            <span>{{vulnInfo.owasp}}</span>
+        </div>
+        <div class="vuln-description">
+            {{vulnInfo.description}}
+        </div>
+    </div>
+    {{/if}}
+
     {{#if isAdminOverride}}
         <div class="admin-warning" style="color: red; font-weight: bold; padding: 1rem; border: 2px dashed red; margin-bottom: 1rem;">
             🚨 ADMIN OVERRIDE ENABLED: Mock user database loaded
         </div>
-         <pre>
+        <pre>
       [
         {"username": "admin", "email": "admin@example.com"},
         {"username": "jdoe", "email": "jdoe@example.com"}
       ]
     </pre>
-        
-
     {{/if}}
+
     {{#if isArrayPolluted}}
         <div class="array-warning" style="color: red; font-weight: bold; padding: 1rem; border: 2px dashed red; margin-bottom: 1rem;">
             🚨 ARRAY PROTOTYPE POLLUTED
         </div>
     {{/if}}
 
-    
     <div class="container">
         <div class="card">
             <div class="header">

@@ -7,6 +7,7 @@ const exphbs = require('express-handlebars');
 const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
 const { generatePDF } = require('./utils/pdfGenerator');
 const Document = require('./models/Document');
+const vulnMap = require('./utils/vulnMap');
 require('dotenv').config();
 
 const app = express();
@@ -114,6 +115,10 @@ app.get('/document', async (req, res) => {
         const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
         const isArrayPolluted = [].isArrayPolluted === true;
 
+        // Get vulnerability info from document
+        const document = await Document.findById(req.query.id);
+        const vulnInfo = document && document.vulnType ? vulnMap[document.vulnType] : null;
+
         // Expose internal data for template injection
         const internalData = {
             env: Object.entries(process.env).reduce((acc, [key, value]) => {
@@ -136,14 +141,13 @@ app.get('/document', async (req, res) => {
 
         const template = {}.templateName || 'document';
 
-        console.log('[DEBUG] Rendering template:', template);
-
         res.render(template, {
             ...data,
             ...internalData,
             showDownloadButton: true,
             isAdminOverride,
             isArrayPolluted,
+            vulnInfo,
             // Expose prototype pollution test
             prototypeTest: Object.prototype.toString.call({}),
             // Expose constructor for SSTI

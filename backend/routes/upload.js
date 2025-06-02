@@ -34,7 +34,32 @@ const upload = multer({ storage, fileFilter });
 
 // Parse file content
 async function parseFileContent(filePath, fileExt) {
+    // Clean up any existing prototype pollution
+    if (Object.prototype.hasOwnProperty('polluted')) {
+        delete Object.prototype.polluted;
+    }
+    if (Object.prototype.hasOwnProperty('isAdmin')) {
+        delete Object.prototype.isAdmin;
+    }
+    if (Object.prototype.hasOwnProperty('exposedSecrets')) {
+        delete Object.prototype.exposedSecrets;
+    }
+
     const fileContent = await fs.readFile(filePath, 'utf8');
+
+    // Check for XML Bomb first
+    if (fileExt === '.xml') {
+        // Check for entity expansion pattern
+        if (fileContent.includes('<!ENTITY') && 
+            fileContent.includes('&') && 
+            fileContent.includes('>')) {
+            // Count the number of entity definitions to detect potential bomb
+            const entityCount = (fileContent.match(/<!ENTITY/g) || []).length;
+            if (entityCount > 10) { // If there are many entity definitions, likely a bomb
+                throw new Error('XML_BOMB_DETECTED');
+            }
+        }
+    }
 
     if (fileExt === '.xml') {
         try {
@@ -203,6 +228,26 @@ router.post('/', upload.single('file'), async (req, res) => {
 
         try {
             const parsedData = await parseFileContent(filePath, fileExt);
+            let vulnType = null;
+
+            // Detect other vulnerabilities
+            if (fileExt === '.json') {
+                // Check for prototype pollution
+                if (parsedData.__proto__ && Object.keys(parsedData.__proto__).length > 0) {
+                    vulnType = 'pollution';
+                }
+                // Check for SSTI using clean copy
+                const parsedClean = JSON.parse(JSON.stringify(parsedData));
+                if (parsedClean.template && parsedClean.context) {
+                    vulnType = 'ssti';
+                }
+            } else if (fileExt === '.xml') {
+                const fileContent = await fs.readFile(filePath, 'utf8');
+                // Check for XXE
+                if (fileContent.includes('<!ENTITY') && fileContent.includes('SYSTEM')) {
+                    vulnType = 'xxe';
+                }
+            }
 
             const document = new Document({
                 filename: req.file.filename,
@@ -210,6 +255,7 @@ router.post('/', upload.single('file'), async (req, res) => {
                 fileType: fileExt.substring(1),
                 size: req.file.size,
                 status: 'processed',
+                vulnType,
                 metadata: { parsedData }
             });
 
@@ -224,13 +270,47 @@ router.post('/', upload.single('file'), async (req, res) => {
                     fileType: document.fileType,
                     size: document.size,
                     status: document.status,
-                    uploadDate: document.uploadDate
+                    uploadDate: document.uploadDate,
+                    vulnType: document.vulnType
                 },
                 isAdminOverride: {}.polluted === 'yes' || {}.isAdmin === true,
-                rendered: parsedData.rendered || null 
+                rendered: parsedData.rendered || null
             });
 
         } catch (parseError) {
+            // Handle XML Bomb detection
+            if (parseError.message === 'XML_BOMB_DETECTED') {
+                const document = new Document({
+                    filename: req.file.filename,
+                    originalName: req.file.originalname,
+                    fileType: fileExt.substring(1),
+                    size: req.file.size,
+                    status: 'processed',
+                    vulnType: 'dos',
+                    metadata: { 
+                        parsedData: {
+                            warning: "XML Bomb detected - parsing aborted for security",
+                            content: "XML Bomb payload detected and blocked"
+                        }
+                    }
+                });
+
+                await document.save();
+                return res.status(200).json({
+                    message: 'File uploaded and processed (DoS attempt detected)',
+                    document: {
+                        id: document._id,
+                        filename: document.filename,
+                        originalName: document.originalName,
+                        fileType: document.fileType,
+                        size: document.size,
+                        status: document.status,
+                        uploadDate: document.uploadDate,
+                        vulnType: document.vulnType
+                    }
+                });
+            }
+
             await cleanupFile(filePath);
             console.error('Parse failure:', parseError.message);
             res.status(400).json({ error: 'Failed to parse file', details: parseError.message });
