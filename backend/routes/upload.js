@@ -38,12 +38,11 @@ async function parseFileContent(filePath, fileExt) {
     if (Object.prototype.hasOwnProperty('polluted')) {
         delete Object.prototype.polluted;
     }
-    if (Object.prototype.hasOwnProperty('isAdmin')) {
-        delete Object.prototype.isAdmin;
-    }
+    // Don't clean up isAdmin - let it persist like isArrayPolluted
     if (Object.prototype.hasOwnProperty('exposedSecrets')) {
         delete Object.prototype.exposedSecrets;
     }
+    // Don't clean up isArrayPolluted here - let it persist like isAdmin
 
     const fileContent = await fs.readFile(filePath, 'utf8');
 

@@ -1,0 +1,12 @@
+{
+  "ignore": [
+    "internal-config.xml",
+    "secrets.json",
+    "env.prod",
+    "*.xml",
+    "*.json",
+    "*.env"
+  ],
+  "watch": ["server.js", "routes/", "models/", "controllers/"],
+  "ext": "js"
+} 

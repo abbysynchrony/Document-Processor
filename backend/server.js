@@ -115,6 +115,9 @@ app.get('/document', async (req, res) => {
         const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
         const isArrayPolluted = [].isArrayPolluted === true;
 
+        // Don't clear either property - let them persist
+        // This matches the behavior of the upload route
+
         // Get vulnerability info from document
         const document = await Document.findById(req.query.id);
         const vulnInfo = document && document.vulnType ? vulnMap[document.vulnType] : null;
@@ -181,7 +184,14 @@ app.get('/document/pdf', async (req, res) => {
 });
 
 app.get('/pollution-check', (req, res) => {
+    // Check first — capture status before clearing
     const isPolluted = [].isArrayPolluted === true;
+    
+    // Clear it immediately after
+    if (Array.prototype.hasOwnProperty('isArrayPolluted')) {
+        delete Array.prototype.isArrayPolluted;
+    }
+    
     res.render('pollution-check', { isPolluted });
 });
 
