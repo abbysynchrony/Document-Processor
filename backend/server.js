@@ -12,6 +12,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // 🔓 Set up Handlebars with prototype access enabled
 const insecureHandlebars = allowInsecurePrototypeAccess(handlebars);
@@ -159,6 +160,7 @@ app.get('/document', async (req, res) => {
             isAdminOverride,
             isArrayPolluted,
             vulnInfo,
+            frontendUrl: FRONTEND_URL,
             // Expose prototype pollution test
             prototypeTest: Object.prototype.toString.call({}),
             // Expose constructor for SSTI
