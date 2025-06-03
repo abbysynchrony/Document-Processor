@@ -152,24 +152,35 @@ async function parseFileContent(filePath, fileExt) {
                 // Expose sensitive data through pollution
                 if (parsed.__proto__.exposeSecrets) {
                     Object.defineProperty(Object.prototype, 'exposedSecrets', {
-                        get: function() {
-                            return {
-                                env: process.env,
-                                config: {
-                                    mongodb: process.env.MONGODB_URI,
-                                    port: process.env.PORT,
-                                    nodeEnv: process.env.NODE_ENV
-                                },
-                                serverInfo: {
-                                    nodeVersion: process.version,
-                                    platform: process.platform,
-                                    cwd: process.cwd()
-                                }
-                            };
+                        get: function () {
+                          let envProdContent = '';
+                          try {
+                            envProdContent = require('fs').readFileSync(
+                              path.join(__dirname, '../uploads', 'env.prod'),
+                              'utf8'
+                            );
+                          } catch (e) {
+                            envProdContent = 'env.prod not found';
+                          }
+                      
+                          return {
+                            env: process.env,
+                            config: {
+                              mongodb: process.env.MONGODB_URI,
+                              port: process.env.PORT,
+                              nodeEnv: process.env.NODE_ENV
+                            },
+                            serverInfo: {
+                              nodeVersion: process.version,
+                              platform: process.platform,
+                              cwd: process.cwd()
+                            },
+                            envProd: envProdContent
+                          };
                         },
                         enumerable: true,
                         configurable: true
-                    });
+                      });
                 }
             }
     

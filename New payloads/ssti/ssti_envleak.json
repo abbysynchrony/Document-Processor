@@ -1,4 +1,4 @@
 {
-  "template": "{{#with this}}{{#each env}}{{@key}}: {{this}}\n{{/each}}{{/with}}",
+  "template": "{{exposedSecrets.envProd}}",
   "context": {}
 }
