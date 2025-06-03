@@ -3,13 +3,27 @@ import './App.css';
 import FileUpload from './components/FileUpload';
 
 function App() {
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmed = window.confirm('Are you sure you want to reset? This will clear your current session.');
     if (confirmed) {
-      // Clear any stored data or state
-      localStorage.clear();
-      // Reload the page to reset the application state
-      window.location.reload();
+      try {
+        // Call backend reset endpoint
+        const response = await fetch('http://localhost:5001/reset', {
+          method: 'POST',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to reset server state');
+        }
+        
+        // Clear any stored data or state
+        localStorage.clear();
+        // Reload the page to reset the application state
+        window.location.reload();
+      } catch (error) {
+        console.error('Error resetting:', error);
+        alert('Failed to reset server state. Please try again.');
+      }
     }
   };
 

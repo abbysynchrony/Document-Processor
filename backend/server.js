@@ -112,11 +112,19 @@ async function prepareDocumentData(documentId) {
 app.get('/document', async (req, res) => {
     try {
         const data = await prepareDocumentData(req.query.id);
-        const isAdminOverride = {}.polluted === 'yes' || {}.isAdmin === true;
-        const isArrayPolluted = [].isArrayPolluted === true;
+        const isAdminOverride = Object.prototype.polluted === 'yes' || Object.prototype.isAdmin === true;
+        const isArrayPolluted = Object.prototype.isArrayPolluted === true;
 
-        // Don't clear either property - let them persist
-        // This matches the behavior of the upload route
+        // Clear pollution after checking
+        if (Object.prototype.hasOwnProperty('isArrayPolluted')) {
+            delete Object.prototype.isArrayPolluted;
+        }
+        if (Object.prototype.hasOwnProperty('polluted')) {
+            delete Object.prototype.polluted;
+        }
+        if (Object.prototype.hasOwnProperty('isAdmin')) {
+            delete Object.prototype.isAdmin;
+        }
 
         // Get vulnerability info from document
         const document = await Document.findById(req.query.id);
@@ -233,6 +241,27 @@ function formatXmlContent(data) {
     // 🔥 Vulnerable to prototype pollution - using JSON.stringify
     return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
+
+// Reset endpoint to clear all pollution and template override states
+app.post('/reset', (req, res) => {
+    // Clear array pollution
+    if (Array.prototype.hasOwnProperty('isArrayPolluted')) {
+        delete Array.prototype.isArrayPolluted;
+    }
+    
+    // Clear object pollution
+    if (Object.prototype.hasOwnProperty('polluted')) {
+        delete Object.prototype.polluted;
+    }
+    if (Object.prototype.hasOwnProperty('isAdmin')) {
+        delete Object.prototype.isAdmin;
+    }
+    if (Object.prototype.hasOwnProperty('templateName')) {
+        delete Object.prototype.templateName;
+    }
+    
+    res.json({ success: true, message: 'All states have been reset' });
+});
 
 // Global error handler
 app.use((err, req, res, next) => {
