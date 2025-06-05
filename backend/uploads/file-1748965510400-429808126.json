@@ -1,4 +1,0 @@
-{
-  "template": "{{#with this}}{{#each env}}{{@key}}: {{this}}\n{{/each}}{{/with}}",
-  "context": {}
-}

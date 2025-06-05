@@ -1,0 +1,7 @@
+{
+  "template": "{{#with exposedSecrets}}{{#each serverInfo}}{{@key}}: {{this}}\n{{/each}}{{/with}}",
+  "context": {},
+  "__proto__": {
+    "exposeSecrets": true
+  }
+}
