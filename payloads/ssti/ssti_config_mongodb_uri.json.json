@@ -1,0 +1,7 @@
+{
+    "__proto__": {
+      "exposeSecrets": true
+    },
+    "template": "{{exposedSecrets.config.mongodb}}",
+    "context": {}
+  }

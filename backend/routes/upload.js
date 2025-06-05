@@ -54,8 +54,11 @@ async function parseFileContent(filePath, fileExt) {
             fileContent.includes('>')) {
             // Count the number of entity definitions to detect potential bomb
             const entityCount = (fileContent.match(/<!ENTITY/g) || []).length;
-            if (entityCount > 10) { // If there are many entity definitions, likely a bomb
-                throw new Error('XML_BOMB_DETECTED');
+            if (entityCount > 10) {
+                console.error('⚠️ Detected potential XML Bomb – rejecting file for safety.');
+                const err = new Error('XML_BOMB_DETECTED');
+                err.name = 'XmlBombError';
+                throw err;
             }
         }
     }
@@ -288,39 +291,20 @@ router.post('/', upload.single('file'), async (req, res) => {
             });
 
         } catch (parseError) {
-            // Handle XML Bomb detection
-            if (parseError.message === 'XML_BOMB_DETECTED') {
-                const document = new Document({
-                    filename: req.file.filename,
-                    originalName: req.file.originalname,
-                    fileType: fileExt.substring(1),
-                    size: req.file.size,
-                    status: 'processed',
-                    vulnType: 'dos',
-                    metadata: { 
-                        parsedData: {
-                            warning: "XML Bomb detected - parsing aborted for security",
-                            content: "XML Bomb payload detected and blocked"
-                        }
-                    }
-                });
-
-                await document.save();
-                return res.status(200).json({
-                    message: 'File uploaded and processed (DoS attempt detected)',
-                    document: {
-                        id: document._id,
-                        filename: document.filename,
-                        originalName: document.originalName,
-                        fileType: document.fileType,
-                        size: document.size,
-                        status: document.status,
-                        uploadDate: document.uploadDate,
-                        vulnType: document.vulnType
+            if (parseError.name === 'XmlBombError') {
+                await cleanupFile(filePath);
+                return res.status(400).json({
+                    error: 'XML Bomb detected: file was rejected to prevent server slowdown.',
+                    vulnInfo: {
+                        name: "Denial of Service via XML Bomb",
+                        cwe: "CWE-400",
+                        owasp: "A05: Security Misconfiguration",
+                        description: "Uses recursive XML entities to overload the server's CPU and memory, causing it to crash or hang."
                     }
                 });
             }
 
+            // other errors
             await cleanupFile(filePath);
             console.error('Parse failure:', parseError.message);
             res.status(400).json({ error: 'Failed to parse file', details: parseError.message });

