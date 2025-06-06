@@ -1,6 +1,6 @@
 {
   "__proto__": {
     "isAdmin": true,
-    "isArrayPolluted": true
+    "polluted": "yes"
   }
 }

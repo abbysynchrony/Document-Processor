@@ -148,42 +148,62 @@ async function parseFileContent(filePath, fileExt) {
             const parsed = JSON.parse(fileContent);
     
             // 🔥 Vulnerable to prototype pollution
-            if (parsed.__proto__) {
-                // Allow full prototype pollution
-                Object.assign(Object.prototype, parsed.__proto__);
-                
-                // Expose sensitive data through pollution
-                if (parsed.__proto__.exposeSecrets) {
+            if (Object.prototype.hasOwnProperty.call(parsed, '__proto__')) {
+                const protoPayload = parsed.__proto__;
+            
+                // Set isAdmin flag
+                if (protoPayload.isAdmin === true) {
+                    Object.defineProperty(Object.prototype, 'isAdmin', {
+                        value: true,
+                        configurable: true,
+                        enumerable: false
+                    });
+                }
+            
+                if (protoPayload.polluted === 'yes') {
+                    Object.defineProperty(Object.prototype, 'isArrayPolluted', {
+                        value: true,
+                        configurable: true,
+                        enumerable: false
+                    });
+                }
+            
+                // Expose secrets
+                if (protoPayload.exposeSecrets) {
                     Object.defineProperty(Object.prototype, 'exposedSecrets', {
                         get: function () {
-                          let envProdContent = '';
-                          try {
-                            envProdContent = require('fs').readFileSync(
-                              path.join(__dirname, '../uploads', 'env.prod'),
-                              'utf8'
-                            );
-                          } catch (e) {
-                            envProdContent = 'env.prod not found';
-                          }
-                      
-                          return {
-                            env: process.env,
-                            config: {
-                              mongodb: process.env.MONGODB_URI,
-                              port: process.env.PORT,
-                              nodeEnv: process.env.NODE_ENV
-                            },
-                            serverInfo: {
-                              nodeVersion: process.version,
-                              platform: process.platform,
-                              cwd: process.cwd()
-                            },
-                            envProd: envProdContent
-                          };
+                            let envProdContent = '';
+                            try {
+                                envProdContent = require('fs').readFileSync(
+                                    path.join(__dirname, '../uploads', 'env.prod'),
+                                    'utf8'
+                                );
+                            } catch (e) {
+                                envProdContent = 'env.prod not found';
+                            }
+            
+                            return {
+                                env: process.env,
+                                config: {
+                                    mongodb: process.env.MONGODB_URI,
+                                    port: process.env.PORT,
+                                    nodeEnv: process.env.NODE_ENV
+                                },
+                                serverInfo: {
+                                    nodeVersion: process.version,
+                                    platform: process.platform,
+                                    cwd: process.cwd()
+                                },
+                                envProd: envProdContent,
+                                mockUsers: [
+                                    { username: "admin", email: "admin@example.com" },
+                                    { username: "jdoe", email: "jdoe@example.com" }
+                                ]
+                            };
                         },
                         enumerable: true,
                         configurable: true
-                      });
+                    });
                 }
             }
     
